@@ -29,9 +29,11 @@ class Handler(BaseHTTPRequestHandler):
 
     def handle_leaderboard(self):
         force = "refresh=1" in self.path
-        standings, error, ts = get_standings(force=force)
+        standings, match_info, error, ts = get_standings(force=force)
         body = json.dumps({
             "players": standings,
+            "liveMatches": match_info["liveMatches"],
+            "nextMatch": match_info["nextMatch"],
             "lastUpdated": ts,
             "error": error,
         }).encode("utf-8")

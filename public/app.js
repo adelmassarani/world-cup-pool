@@ -8,6 +8,7 @@ async function loadStandings() {
     const data = await res.json();
     renderLeaderboard(data.players);
     renderSquads(data.players);
+    renderBanner(data.liveMatches, data.nextMatch);
     renderLastUpdated(data.lastUpdated, data.error);
   } catch (err) {
     document.getElementById("lastUpdated").textContent =
@@ -39,6 +40,45 @@ function formatMatchDate(iso) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function renderMatchup(match) {
+  return `<span class="banner-team"><span class="flag">${match.home.flag}</span> ${match.home.name}</span>
+    <span class="banner-score">${
+      match.home.score !== null && match.home.score !== undefined
+        ? `${match.home.score} - ${match.away.score}`
+        : "vs"
+    }</span>
+    <span class="banner-team"><span class="flag">${match.away.flag}</span> ${match.away.name}</span>`;
+}
+
+function renderBanner(liveMatches, nextMatch) {
+  const el = document.getElementById("matchBanner");
+  if (liveMatches && liveMatches.length > 0) {
+    el.innerHTML = liveMatches
+      .map(
+        (match) => `
+        <div class="banner-row banner-live">
+          <span class="live-indicator"><span class="live-dot"></span> LIVE</span>
+          ${renderMatchup(match)}
+          <span class="banner-stage">${match.stage}</span>
+        </div>`
+      )
+      .join("");
+    return;
+  }
+
+  if (nextMatch) {
+    el.innerHTML = `
+      <div class="banner-row banner-upcoming">
+        <span class="banner-label">Up Next</span>
+        ${renderMatchup(nextMatch)}
+        <span class="banner-stage">${nextMatch.stage} · ${formatMatchDate(nextMatch.date)}</span>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = "";
 }
 
 function renderLeaderboard(players) {

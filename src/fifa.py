@@ -1,6 +1,7 @@
 import json
 import time
 import urllib.request
+from datetime import datetime, timedelta, timezone
 
 from data import PLAYERS, TEAMS, FIFA_COMPETITION_ID, FIFA_SEASON_ID
 
@@ -15,7 +16,7 @@ GROUP_STAGE = "First Stage"
 KNOCKOUT_STAGES = {"Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"}
 
 CACHE_TTL_SECONDS = 90
-_cache = {"timestamp": 0, "standings": None, "error": None}
+_cache = {"timestamp": 0, "standings": None, "matchInfo": None, "error": None}
 
 
 def fetch_matches():
@@ -153,6 +154,62 @@ def build_team_schedules(matches):
     return schedules
 
 
+MATCH_DURATION = timedelta(hours=3.5)
+
+
+def _parse_date(date_str):
+    if not date_str:
+        return None
+    return datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+
+
+def _describe_match(m):
+    home, away = m.get("Home") or {}, m.get("Away") or {}
+    home_code, away_code = home.get("IdCountry"), away.get("IdCountry")
+    return {
+        "date": m.get("Date"),
+        "stage": m.get("StageName", [{}])[0].get("Description"),
+        "home": {
+            "code": home_code,
+            "name": TEAMS.get(home_code, {}).get("name", home_code or "TBD"),
+            "flag": TEAMS.get(home_code, {}).get("flag", ""),
+            "score": m.get("HomeTeamScore"),
+        },
+        "away": {
+            "code": away_code,
+            "name": TEAMS.get(away_code, {}).get("name", away_code or "TBD"),
+            "flag": TEAMS.get(away_code, {}).get("flag", ""),
+            "score": m.get("AwayTeamScore"),
+        },
+    }
+
+
+def get_match_status_info(matches):
+    """Returns currently live matches and the next upcoming match."""
+    now = datetime.now(timezone.utc)
+
+    live = []
+    upcoming = []
+    for m in matches:
+        if m.get("MatchStatus") == 0:
+            continue  # finished
+        date = _parse_date(m.get("Date"))
+        if date is None:
+            continue
+        if date <= now <= date + MATCH_DURATION:
+            live.append((date, m))
+        elif date > now:
+            upcoming.append((date, m))
+
+    live.sort(key=lambda x: x[0])
+    upcoming.sort(key=lambda x: x[0])
+
+    return {
+        "liveMatches": [_describe_match(m) for _, m in live],
+        "nextMatch": _describe_match(upcoming[0][1]) if upcoming else None,
+    }
+
+
 def compute_standings(matches):
     eliminated_teams = compute_eliminations(matches)
     schedules = build_team_schedules(matches)
@@ -243,18 +300,21 @@ def compute_standings(matches):
 def get_standings(force=False):
     now = time.time()
     if not force and _cache["standings"] is not None and (now - _cache["timestamp"]) < CACHE_TTL_SECONDS:
-        return _cache["standings"], _cache["error"], _cache["timestamp"]
+        return _cache["standings"], _cache["matchInfo"], _cache["error"], _cache["timestamp"]
 
     try:
         matches = fetch_matches()
         standings = compute_standings(matches)
+        match_info = get_match_status_info(matches)
         _cache["standings"] = standings
+        _cache["matchInfo"] = match_info
         _cache["error"] = None
         _cache["timestamp"] = now
     except Exception as e:
         _cache["error"] = str(e)
         if _cache["standings"] is None:
             _cache["standings"] = compute_standings([])
+            _cache["matchInfo"] = get_match_status_info([])
         _cache["timestamp"] = now
 
-    return _cache["standings"], _cache["error"], _cache["timestamp"]
+    return _cache["standings"], _cache["matchInfo"], _cache["error"], _cache["timestamp"]

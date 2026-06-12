@@ -36,6 +36,77 @@ header h1 {
   font-size: 0.9rem;
 }
 
+.match-banner:empty {
+  display: none;
+}
+
+.banner-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 10px auto 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 0.9rem;
+}
+
+.banner-live {
+  border: 1px solid var(--loss);
+}
+
+.banner-label {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--loss);
+  letter-spacing: 0.05em;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--loss);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.4);
+  }
+}
+
+.banner-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.banner-score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.banner-stage {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .last-updated {
   color: var(--muted);
   font-size: 0.8rem;
