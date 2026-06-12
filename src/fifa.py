@@ -41,7 +41,7 @@ def compute_eliminations(matches):
         stage = m.get("StageName", [{}])[0].get("Description")
         if stage != GROUP_STAGE:
             continue
-        home, away = m.get("Home", {}), m.get("Away", {})
+        home, away = m.get("Home") or {}, m.get("Away") or {}
         if not home.get("IdCountry") or not away.get("IdCountry"):
             continue
         gid = m.get("IdGroup")
@@ -108,8 +108,54 @@ def compute_eliminations(matches):
     return eliminated
 
 
+def build_team_schedules(matches):
+    """Returns a dict of team code -> chronological list of all matches
+    (played and upcoming) involving that team."""
+    schedules = {code: [] for code in TEAMS}
+
+    for m in matches:
+        home, away = m.get("Home") or {}, m.get("Away") or {}
+        home_code, away_code = home.get("IdCountry"), away.get("IdCountry")
+        stage = m.get("StageName", [{}])[0].get("Description")
+        finished = m.get("MatchStatus") == 0
+        home_score, away_score = m.get("HomeTeamScore"), m.get("AwayTeamScore")
+
+        for code, opponent_code, own_score, opp_score in (
+            (home_code, away_code, home_score, away_score),
+            (away_code, home_code, away_score, home_score),
+        ):
+            if code not in schedules:
+                continue
+            has_score = finished and own_score is not None and opp_score is not None
+            result = None
+            if has_score:
+                if own_score > opp_score:
+                    result = "w"
+                elif own_score < opp_score:
+                    result = "l"
+                else:
+                    result = "t"
+
+            schedules[code].append({
+                "date": m.get("Date"),
+                "stage": stage,
+                "opponent": opponent_code,
+                "opponentName": TEAMS.get(opponent_code, {}).get("name", opponent_code or "TBD"),
+                "opponentFlag": TEAMS.get(opponent_code, {}).get("flag", ""),
+                "finished": finished,
+                "score": f"{own_score}-{opp_score}" if has_score else None,
+                "result": result,
+            })
+
+    for code in schedules:
+        schedules[code].sort(key=lambda x: x["date"] or "")
+
+    return schedules
+
+
 def compute_standings(matches):
     eliminated_teams = compute_eliminations(matches)
+    schedules = build_team_schedules(matches)
 
     # Per-team record
     team_records = {
@@ -124,8 +170,8 @@ def compute_standings(matches):
         if stage in EXCLUDED_STAGES:
             continue
 
-        home = m.get("Home", {})
-        away = m.get("Away", {})
+        home = m.get("Home") or {}
+        away = m.get("Away") or {}
         home_code = home.get("IdCountry")
         away_code = away.get("IdCountry")
         home_score = m.get("HomeTeamScore")
@@ -178,6 +224,7 @@ def compute_standings(matches):
                 "points": rec["w"] * 1 + rec["t"] * 0.5,
                 "results": rec["results"],
                 "eliminated": code in eliminated_teams,
+                "schedule": schedules[code],
             })
         points = total_w * 1 + total_t * 0.5
         players.append({

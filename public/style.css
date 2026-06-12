@@ -166,3 +166,91 @@ li.eliminated {
   padding: 1px 4px;
   margin-left: 6px;
 }
+
+.team-row {
+  cursor: pointer;
+  user-select: none;
+}
+
+.team-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.team-row::after {
+  content: "▾";
+  color: var(--muted);
+  font-size: 0.75rem;
+  margin-left: 8px;
+  transition: transform 0.15s ease;
+}
+
+.team-row.expanded::after {
+  transform: rotate(180deg);
+}
+
+.squad-card li.schedule-container {
+  display: none;
+  padding: 0;
+  border-bottom: none;
+}
+
+.squad-card li.schedule-container.expanded {
+  display: block;
+}
+
+.schedule {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  margin: 4px 0 8px;
+  padding: 4px 10px;
+}
+
+.schedule ul {
+  margin: 0;
+  padding: 0;
+}
+
+.schedule li {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.85rem;
+  padding: 6px 0;
+  gap: 8px;
+}
+
+.schedule li .team-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule li .schedule-date,
+.schedule li .record {
+  flex-shrink: 0;
+}
+
+.schedule li:last-child {
+  border-bottom: none;
+}
+
+.schedule li.schedule-meta {
+  display: block;
+  padding: 0 0 6px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.schedule-date {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.schedule-empty {
+  margin: 0;
+  padding: 8px 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
