@@ -11,6 +11,8 @@ FIFA_MATCHES_URL = (
 )
 
 EXCLUDED_STAGES = {"Play-off for third place"}
+GROUP_STAGE = "First Stage"
+KNOCKOUT_STAGES = {"Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Final"}
 
 CACHE_TTL_SECONDS = 90
 _cache = {"timestamp": 0, "standings": None, "error": None}
@@ -23,7 +25,92 @@ def fetch_matches():
     return data.get("Results", [])
 
 
+def compute_eliminations(matches):
+    """Returns the set of team codes that are eliminated from the tournament.
+
+    Group stage: a team is eliminated once its group is fully played and it
+    finishes 4th, or finishes 3rd but isn't among the 8 best 3rd-place teams
+    across all groups (only checked once all 12 groups are complete).
+    Knockout stage: a team is eliminated as soon as it loses a match.
+    """
+    eliminated = set()
+
+    group_matches = {}
+    group_teams = {}
+    for m in matches:
+        stage = m.get("StageName", [{}])[0].get("Description")
+        if stage != GROUP_STAGE:
+            continue
+        home, away = m.get("Home", {}), m.get("Away", {})
+        if not home.get("IdCountry") or not away.get("IdCountry"):
+            continue
+        gid = m.get("IdGroup")
+        group_matches.setdefault(gid, []).append(m)
+        group_teams.setdefault(gid, set())
+        group_teams[gid].add(home["IdCountry"])
+        group_teams[gid].add(away["IdCountry"])
+
+    third_place_candidates = []
+    groups_complete = 0
+    for gid, gms in group_matches.items():
+        teams = group_teams[gid]
+        if len(teams) != 4:
+            continue
+        finished = [m for m in gms if m.get("MatchStatus") == 0]
+        if len(finished) != 6:  # round-robin of 4 teams = 6 matches
+            continue
+        groups_complete += 1
+
+        stats = {code: {"pts": 0, "gd": 0, "gs": 0} for code in teams}
+        for m in finished:
+            home, away = m["Home"], m["Away"]
+            hs, aw = m["HomeTeamScore"], m["AwayTeamScore"]
+            hc, ac = home["IdCountry"], away["IdCountry"]
+            stats[hc]["gs"] += hs
+            stats[hc]["gd"] += hs - aw
+            stats[ac]["gs"] += aw
+            stats[ac]["gd"] += aw - hs
+            if hs > aw:
+                stats[hc]["pts"] += 3
+            elif aw > hs:
+                stats[ac]["pts"] += 3
+            else:
+                stats[hc]["pts"] += 1
+                stats[ac]["pts"] += 1
+
+        ranked = sorted(
+            stats.items(),
+            key=lambda kv: (-kv[1]["pts"], -kv[1]["gd"], -kv[1]["gs"]),
+        )
+        eliminated.add(ranked[3][0])  # 4th place is always out
+        code, third_stats = ranked[2]
+        third_place_candidates.append((code, third_stats["pts"], third_stats["gd"], third_stats["gs"]))
+
+    if groups_complete == 12 and len(third_place_candidates) == 12:
+        ranked_thirds = sorted(third_place_candidates, key=lambda t: (-t[1], -t[2], -t[3]))
+        for code, *_ in ranked_thirds[8:]:
+            eliminated.add(code)
+
+    for m in matches:
+        stage = m.get("StageName", [{}])[0].get("Description")
+        if stage not in KNOCKOUT_STAGES:
+            continue
+        if m.get("MatchStatus") != 0:
+            continue
+        winner_id = m.get("Winner")
+        if not winner_id:
+            continue
+        for side in ("Home", "Away"):
+            team = m.get(side, {})
+            if team.get("IdCountry") and team.get("IdTeam") != winner_id:
+                eliminated.add(team["IdCountry"])
+
+    return eliminated
+
+
 def compute_standings(matches):
+    eliminated_teams = compute_eliminations(matches)
+
     # Per-team record
     team_records = {
         code: {"w": 0, "l": 0, "t": 0, "results": []}
@@ -90,6 +177,7 @@ def compute_standings(matches):
                 "t": rec["t"],
                 "points": rec["w"] * 1 + rec["t"] * 0.5,
                 "results": rec["results"],
+                "eliminated": code in eliminated_teams,
             })
         points = total_w * 1 + total_t * 0.5
         players.append({

@@ -54,8 +54,8 @@ function renderSquads(players) {
     const teamItems = p.squad
       .map(
         (team) => `
-        <li>
-          <span class="team-name"><span class="flag">${team.flag}</span> ${team.name}</span>
+        <li class="${team.eliminated ? "eliminated" : ""}">
+          <span class="team-name"><span class="flag">${team.flag}</span> ${team.name}${team.eliminated ? ' <span class="out-badge">OUT</span>' : ""}</span>
           <span class="record"><span class="w">${team.w}W</span> <span class="t">${team.t}T</span> <span class="l">${team.l}L</span></span>
         </li>`
       )
