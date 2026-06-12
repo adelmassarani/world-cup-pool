@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "world-cup-pool",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["src/server.py"],
+      "port": 8765
+    }
+  ]
+}

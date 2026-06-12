@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: world-cup-pool
+    runtime: python
+    plan: free
+    buildCommand: ""
+    startCommand: "python3 src/server.py"

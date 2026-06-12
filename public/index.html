@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Cup 2026 Pool</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>🏆 World Cup 2026 Pool</h1>
+    <p class="subtitle">Win = 1pt &nbsp;·&nbsp; Tie = 0.5pt &nbsp;·&nbsp; Loss = 0pt &nbsp;·&nbsp; (3rd place game doesn't count)</p>
+    <p id="lastUpdated" class="last-updated"></p>
+  </header>
+
+  <main>
+    <section id="leaderboard">
+      <h2>Leaderboard</h2>
+      <table id="leaderboard-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Player</th>
+            <th>Pts</th>
+            <th>W</th>
+            <th>T</th>
+            <th>L</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section id="squads">
+      <h2>Squads</h2>
+      <div id="squad-cards" class="squad-grid"></div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

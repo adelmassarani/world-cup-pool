@@ -1,0 +1,153 @@
+:root {
+  --bg: #0b1f3a;
+  --card: #112a4e;
+  --accent: #4ade80;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --win: #22c55e;
+  --loss: #ef4444;
+  --tie: #eab308;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  text-align: center;
+  padding: 24px 16px 12px;
+}
+
+header h1 {
+  margin: 0 0 8px;
+  font-size: 1.8rem;
+}
+
+.subtitle {
+  color: var(--muted);
+  margin: 4px 0;
+  font-size: 0.9rem;
+}
+
+.last-updated {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 4px 0 0;
+}
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+h2 {
+  margin: 24px 0 12px;
+  font-size: 1.3rem;
+}
+
+#leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+#leaderboard-table th,
+#leaderboard-table td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#leaderboard-table th:nth-child(2),
+#leaderboard-table td:nth-child(2) {
+  text-align: left;
+}
+
+#leaderboard-table th {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+#leaderboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+#leaderboard-table td:nth-child(3) {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.squad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.squad-card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.squad-card h3 {
+  margin: 0 0 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.squad-card .points {
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.squad-card ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.squad-card li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.95rem;
+}
+
+.squad-card li:last-child {
+  border-bottom: none;
+}
+
+.team-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flag {
+  font-size: 1.2rem;
+}
+
+.record {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.record .w { color: var(--win); }
+.record .t { color: var(--tie); }
+.record .l { color: var(--loss); }
